@@ -80,7 +80,8 @@ resource "bitwarden_org_collection" "my_collection" {
 
 ### Read-Only
 
-- `member` (Set of Object) [Experimental] Member of a collection. (see [below for nested schema](#nestedatt--member))
+- `member` (Set of Object) [Experimental] Member (Users) of a collection. (see [below for nested schema](#nestedatt--member))
+- `member_group` (Set of Object) [Experimental] Member Groups of a collection. (see [below for nested schema](#nestedatt--member_group))
 - `name` (String) Name.
 
 <a id="nestedatt--member"></a>
@@ -90,4 +91,16 @@ Read-Only:
 
 - `hide_passwords` (Boolean)
 - `id` (String)
+- `manage` (Boolean)
+- `read_only` (Boolean)
+
+
+<a id="nestedatt--member_group"></a>
+### Nested Schema for `member_group`
+
+Read-Only:
+
+- `hide_passwords` (Boolean)
+- `id` (String)
+- `manage` (Boolean)
 - `read_only` (Boolean)

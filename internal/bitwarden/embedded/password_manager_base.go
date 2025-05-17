@@ -256,6 +256,17 @@ func decryptOrgCollection(obj webapi.Collection, secret AccountSecrets) (*models
 			HidePasswords: u.HidePasswords,
 			Id:            u.Id,
 			ReadOnly:      u.ReadOnly,
+			Manage:        u.Manage,
+		})
+	}
+
+	groups := []models.OrgCollectionMember{}
+	for _, g := range obj.Groups {
+		groups = append(groups, models.OrgCollectionMember{
+			HidePasswords: g.HidePasswords,
+			Id:            g.Id,
+			ReadOnly:      g.ReadOnly,
+			Manage:        g.Manage,
 		})
 	}
 
@@ -266,6 +277,7 @@ func decryptOrgCollection(obj webapi.Collection, secret AccountSecrets) (*models
 		Object:         models.ObjectTypeOrgCollection,
 		OrganizationID: obj.OrganizationId,
 		Users:          users,
+		Groups:         groups,
 	}, nil
 }
 
@@ -448,21 +460,33 @@ func encryptOrgCollection(ctx context.Context, obj models.OrgCollection, secret 
 		return nil, fmt.Errorf("error encrypting collection: %w", err)
 	}
 
-	users := make([]webapi.CollectionUser, len(obj.Users))
+	users := make([]webapi.CollectionMember, len(obj.Users))
 	for k, orgMember := range obj.Users {
-		users[k] = webapi.CollectionUser{
+		users[k] = webapi.CollectionMember{
 			HidePasswords: orgMember.HidePasswords,
 			Id:            orgMember.Id,
 			ReadOnly:      orgMember.ReadOnly,
+			Manage:        orgMember.Manage,
 		}
 	}
+
+	groups := make([]webapi.CollectionMember, len(obj.Groups))
+	for k, orgMember := range obj.Groups {
+		groups[k] = webapi.CollectionMember{
+			HidePasswords: orgMember.HidePasswords,
+			Id:            orgMember.Id,
+			ReadOnly:      orgMember.ReadOnly,
+			Manage:        orgMember.Manage,
+		}
+	}
+
 	encObj := webapi.Collection{
-		Groups:         []string{},
 		Id:             obj.ID,
 		Manage:         obj.Manage,
 		Name:           collectionName,
 		OrganizationId: obj.OrganizationID,
 		Users:          users,
+		Groups:         groups,
 	}
 
 	if verifyObjectEncryption {
@@ -912,6 +936,12 @@ func matchHost(url1, url2 string) (bool, error) {
 
 func verifyDecryptedObject[T any](ctx context.Context, actual, expected T) error {
 	err := compareObjects(ctx, actual, expected)
+	if err != nil {
+		tflog.Trace(ctx, fmt.Sprintf("verifyDecryptedObject: error object details."), map[string]interface{}{
+			"actual":   actual,
+			"expected": expected,
+		})
+	}
 	if err != nil && panicOnEncryptionErrors {
 		panic(err)
 	} else if err != nil {
